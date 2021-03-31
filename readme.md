@@ -16,9 +16,10 @@
 
 1. Create a virtual environment  `python -m venv .venv`
 2. Activate virtual environment `.venv\Scripts\activate` (Windows) | `source .venv/bin/activate` (Linux, Mac)
-3. Create migrations `python manage.py makemigrations ` 
-4. Migrate to database  `python manage.py migrate`
-5. Run server `python manage.py runserver`
+3. Install Dependencies `pip install -r requirements.txt`
+4. Create migrations `python manage.py makemigrations ` 
+5. Migrate to database  `python manage.py migrate`
+6. Run server `python manage.py runserver`
 
 ## URLs
 
