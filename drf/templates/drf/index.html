@@ -1,0 +1,186 @@
+{% extends 'drf/base.html' %}
+{% load static %}
+{% block title %}Home Page{% endblock%}
+{% block body%}
+
+<div class="container">
+  <div class="row py-5">
+    <div class="col-md-6">
+      <div class="btn-group" role="group" aria-label="Basic example" id="methodBtn">
+        <a class="btn btn-secondary" href="#" onclick="onMethodSelect(this)">GET</a>
+        <a class="btn btn-outline-secondary" href="#" onclick="onMethodSelect(this)">POST</a>
+        <a class="btn btn-outline-secondary" href="#" onclick="onMethodSelect(this)">PUT</a>
+        <a class="btn btn-outline-secondary" href="#" onclick="onMethodSelect(this)">DELETE</a>
+      </div>
+      <div class="form-group">
+        <label for="user_id">User Id</label>
+        <input type="text" name="user_id" class="form-control">
+      </div>
+      <div class="form-group" style="display: none;">
+        <label for="first_name">First Name</label>
+        <input type="text" name="first_name" class="form-control">
+      </div>
+      <div class="form-group" style="display: none;">
+        <label for="last_name">Last Name</label>
+        <input type="text" name="last_name" class="form-control">
+      </div>
+      <div class="form-group" style="display: none;">
+        <label for="username">Username</label>
+        <input type="text" name="username" class="form-control">
+      </div>
+      <div class="form-group" style="display: none;">
+        <label for="email">Email</label>
+        <input type="email" name="email" class="form-control">
+      </div>
+      <button class="btn btn-success w-100" onclick="onSubmit()">Send</button>
+    </div>
+    <div class="col-md-6 rounded border border-secondary" id="jsondiv" style="min-height: 100xp;">
+      <p>Json Resonse Box</p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <table>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>First Name</th>
+              <th>Last Name</th>
+              <th>Email</th>
+              <th>Usesrname</th>
+            </tr>
+          </thead>
+          <tbody id="userTable">
+
+            
+          </tbody>
+        </table>
+        <nav aria-label="Page navigation example">
+          <ul class="pagination">
+            <li class="page-item" id="prevPage"><a class="page-link" href="#" onclick="loadUsers(this.getAttribute('href'));return false;">Previous</a></li>
+            <li class="page-item" id="nextPage"><a class="page-link" href="#" onclick="loadUsers(this.getAttribute('href'));return false;">Next</a></li>
+          </ul>
+        </nav>
+    </div>
+  </div>
+  <div class="position-fixed" style="bottom: 45px; right: 24px;">
+    <a class="btn btn-primary" href="{% url 'logs' %}">
+      View Logs
+    </a>
+  </div>
+</div>
+
+<script src="{% static 'js/jsonrender.js'%}"></script>
+<script>
+  const baseURL = "/api/";
+
+  onMethodSelect = function (obj) {
+    $("#methodBtn a.btn-secondary").removeClass("btn-secondary").addClass("btn-outline-secondary")
+    $(obj).removeClass("btn-outline-secondary").addClass("btn-secondary")
+    switch (obj.innerText) {
+      case "GET":
+        $(".form-group").hide();
+        $("input[name='user_id']").parent().show();
+        break;
+      case "POST":
+        $(".form-group").show();
+        $("input[name='user_id']").parent().hide();
+        break;
+      case "PUT":
+        $(".form-group").show();
+        break;
+      case "DELETE":
+        $(".form-group").hide();
+        $("input[name='user_id']").parent().show();
+        break;
+    }
+  }
+  renderJsonHTML = function (data) {
+    renderjson.set_show_to_level("all")
+    $("#jsondiv").html(renderjson(data));
+  }
+
+  getfieldsData = function () {
+    let val = {
+      username: $("input[name='username']").val().trim(),
+      first_name: $("input[name='first_name']").val().trim(),
+      last_name: $("input[name='last_name']").val().trim(),
+      email: $("input[name='email']").val().trim()
+    };
+    return val
+  }
+  onSubmit = function () {
+    
+    switch ($("#methodBtn a.btn-secondary").text().trim()) {
+      case "GET":
+        $.get(baseURL + $("input[name='user_id']").val().trim(), renderJsonHTML).
+          fail(function (error) { renderJsonHTML(error["responseJSON"]) });
+        break;
+      case "POST":
+        $.ajax({
+          type: "POST",
+          url: baseURL,
+          data: getfieldsData(),
+          dataType: "json",
+          success: renderJsonHTML,
+        }).fail(function (error) { renderJsonHTML(error["responseJSON"]) });
+        break;
+      case "PUT":
+        $.ajax({
+          url: baseURL + $("input[name='user_id']").val().trim() + "/",
+          type: 'put',
+          data: getfieldsData(),
+          dataType: "json",
+          success: renderJsonHTML,
+          error: function (error) {
+            renderJsonHTML(error["responseJSON"]);
+          }
+        });
+        break;
+      case "DELETE":
+        $.ajax({
+          url: baseURL + $("input[name='user_id']").val().trim() + "/",
+          type: 'delete',
+          contentType: 'application/json',
+          success: function (data) {
+            renderJsonHTML({ "success": "User Deleted" });
+          },
+          error: function (error) {
+            renderJsonHTML(error["responseJSON"]);
+          }
+        });
+        break;
+    }
+
+    return false;
+  }
+  renderTable = function(data){
+    let rows = "";
+    for(let i = 0; i < data["results"].length; i++){
+      rows += "<tr><td>"+data["results"][i]["id"]+"</td><td>"+data["results"][i]["first_name"]+"</td><td>"+data["results"][i]["last_name"]+"</td><td>"+data["results"][i]["email"]+"</td><td>"+data["results"][i]["username"]+"</td></tr>"
+    }
+    $("#userTable").html(rows)
+    if(data["previous"] === null){
+      $("#prevPage a").attr("href", "").fadeOut()
+    }else{
+      $("#prevPage a").attr("href", data["previous"]).fadeIn()
+    }
+    if(data["next"] === null){
+      $("#nextPage a").attr("href", "").fadeOut()
+    }else{
+
+      $("#nextPage a").attr("href", data["next"]).fadeIn()
+    }
+  }
+  loadUsers = function(url){
+    $.get(
+      url, renderTable
+    ).fail(function(error){
+      alert(error);
+    });
+    return false;
+  }
+  window.onload = function(){loadUsers(baseURL)};
+</script>
+{% endblock%}

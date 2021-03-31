@@ -1,0 +1,42 @@
+{% extends 'drf/base.html'%}
+{% block title %}Logs Page{% endblock %}
+{% block body %}
+<h1> Api Logs</h1>
+<table>
+    <table class="table">
+        <thead>
+          <tr>
+            <th>Api</th>
+            <th>Method</th>
+            <th>Status</th>
+            <th>Time</th>
+        </tr>
+    </thead>
+    <tbody>
+        
+        {% for log in logs%}
+        <tr>
+            <td>{{ log.api }}</td>
+            <td>{{ log.method }}</td>
+            <td>{{ log.status_code }}</td>
+            <td>{{ log.added_on }}</td>
+        </tr>
+        {% endfor %}        
+    </tbody>
+</table>
+{% if is_paginated %}
+    <div class="pagination">
+        <span class="page-links">
+            {% if page_obj.has_previous %}
+                <a href="/logs?page={{ page_obj.previous_page_number }}">previous</a>
+            {% endif %}
+            <span class="page-current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+            </span>
+            {% if page_obj.has_next %}
+                <a href="/logs?page={{ page_obj.next_page_number }}">next</a>
+            {% endif %}
+        </span>
+    </div>
+{% endif %}
+{% endblock %}
